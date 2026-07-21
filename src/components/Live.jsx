@@ -112,7 +112,7 @@ function LiveItem({ event, reaction, onSelect }) {
           </p>
           <span className="live-viewers">
             <Icon name="users" size={13} />
-            {compact(event.spotsLeft)} watching
+            {compact(event.viewers ?? 0)} watching
           </span>
         </div>
 

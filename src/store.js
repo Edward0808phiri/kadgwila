@@ -121,3 +121,76 @@ export function nextInstallment(plan) {
   if (plan.paymentsLeft <= 1) return remaining
   return Math.ceil(remaining / plan.paymentsLeft / 5) * 5 // round up to nearest K5
 }
+
+/* ==========================================================================
+   LIVE REACTIONS — likes and comments on live events.
+   Its own key and listener set so a reaction never rewrites the ticket blob.
+   Local only: these are this browser's likes and comments, nobody else's.
+   ========================================================================== */
+const REACT_KEY = 'zikets.reactions.v1'
+
+function readReactions() {
+  try {
+    const raw = localStorage.getItem(REACT_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+let reactions = readReactions()
+const reactionListeners = new Set()
+
+function commitReactions(next) {
+  reactions = next
+  try {
+    localStorage.setItem(REACT_KEY, JSON.stringify(reactions))
+  } catch {
+    /* storage full / disabled — keep working in-memory */
+  }
+  reactionListeners.forEach((l) => l())
+}
+
+function subscribeReactions(fn) {
+  reactionListeners.add(fn)
+  return () => reactionListeners.delete(fn)
+}
+
+const EMPTY_REACTION = { liked: false, comments: [] }
+
+export function useReactions() {
+  return useSyncExternalStore(subscribeReactions, () => reactions)
+}
+
+/** Reaction record for one event, with the blank shape as a fallback so
+ *  callers never branch on undefined. */
+export function reactionFor(all, eventId) {
+  return all[eventId] ?? EMPTY_REACTION
+}
+
+export function toggleLike(eventId) {
+  const current = reactionFor(reactions, eventId)
+  commitReactions({
+    ...reactions,
+    [eventId]: { ...current, liked: !current.liked },
+  })
+}
+
+export function addComment(eventId, body) {
+  const text = body.trim()
+  if (!text) return
+  const current = reactionFor(reactions, eventId)
+  const comment = { id: uid(), body: text, at: Date.now() }
+  commitReactions({
+    ...reactions,
+    [eventId]: { ...current, comments: [...current.comments, comment] },
+  })
+}
+
+export function removeComment(eventId, commentId) {
+  const current = reactionFor(reactions, eventId)
+  commitReactions({
+    ...reactions,
+    [eventId]: { ...current, comments: current.comments.filter((c) => c.id !== commentId) },
+  })
+}

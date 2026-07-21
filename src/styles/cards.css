@@ -16,11 +16,47 @@
     box-shadow var(--dur-2) var(--ease);
 }
 
+/* The card wears the flier's own colour instead of the flat grey surface.
+   --tint-h / --tint-s are sampled from the poster and set inline; cards whose
+   image never yields a usable hue simply keep --bg-2. */
+.card[data-tinted='true'] {
+  /* Indirection so sold-out cards can mute the sampled saturation — the raw
+     --tint-s arrives inline and would otherwise outrank any rule here. */
+  --tint-sat: var(--tint-s);
+  background:
+    linear-gradient(
+      180deg,
+      hsl(var(--tint-h) var(--tint-sat) 27% / 0.95),
+      hsl(var(--tint-h) calc(var(--tint-sat) * 0.7) 13% / 0.96) 65%,
+      hsl(var(--tint-h) calc(var(--tint-sat) * 0.5) 8%)
+    ),
+    var(--bg-2);
+  border-color: hsl(var(--tint-h) var(--tint-sat) 45% / 0.28);
+}
+
+.card[data-tinted='true'] .card-media,
+.card[data-tinted='true'] .card-foot {
+  border-color: hsl(var(--tint-h) var(--tint-sat) 50% / 0.2);
+}
+
+.card[data-tinted='true'] .card-media {
+  background: hsl(var(--tint-h) var(--tint-sat) 16%);
+}
+
+/* Carry the tint into the photo scrim so image and body meet without a seam. */
+.card[data-tinted='true'] .card-media::after {
+  background: linear-gradient(0deg, hsl(var(--tint-h) var(--tint-sat) 12% / 0.9), transparent);
+}
+
 @media (hover: hover) {
   .card:hover {
     transform: translateY(-3px);
     border-color: var(--ink-3);
     box-shadow: var(--shadow-md);
+  }
+
+  .card[data-tinted='true']:hover {
+    border-color: hsl(var(--tint-h) var(--tint-sat) 60% / 0.5);
   }
 
   .card:hover .card-img {
@@ -247,7 +283,11 @@
   }
 }
 
-/* Sold out */
+/* Sold out — the tint stays, muted, so the card still reads as retired. */
+.card[data-sold='true'][data-tinted='true'] {
+  --tint-sat: 12%;
+}
+
 .card[data-sold='true'] .card-media {
   filter: grayscale(0.7) brightness(0.6);
 }

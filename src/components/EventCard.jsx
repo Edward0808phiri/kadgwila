@@ -1,7 +1,8 @@
 import Icon from './ui/Icon.jsx'
 import { categoryIcon } from '../data/events.js'
 import { dateParts, kwacha, whenLabel } from '../lib/format.js'
-import { eventImage, eventSrcSet } from '../lib/images.js'
+import { eventImage, eventSrcSet, eventTintSource } from '../lib/images.js'
+import useImageTint from '../hooks/useImageTint.js'
 
 const LOW_STOCK = 60
 
@@ -13,8 +14,15 @@ export default function EventCard({ event, onSelect, priority = false }) {
 
   const action = soldOut ? 'Sold out' : free ? 'Reserve a spot' : 'Get tickets'
 
+  const tint = useImageTint(eventTintSource(event))
+
   return (
-    <article className="card" data-sold={soldOut || undefined}>
+    <article
+      className="card"
+      data-sold={soldOut || undefined}
+      data-tinted={tint ? 'true' : undefined}
+      style={tint ? { '--tint-h': tint.h, '--tint-s': `${tint.s}%` } : undefined}
+    >
       <div className="card-media">
         <img
           className="card-img"

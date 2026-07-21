@@ -15,4 +15,14 @@ export function eventSrcSet(event, w, h) {
   return `${eventImage(event, w, h)} 1x, ${eventImage(event, w * 2, h * 2)} 2x`
 }
 
+/**
+ * A deliberately tiny crop used only for sampling the flier's colour — the
+ * card tint needs an average, not detail, so this stays around a kilobyte.
+ */
+export function eventTintSource(event) {
+  if (event?.image) return event.image
+  if (!event?.photo) return ''
+  return `${UNSPLASH}/${event.photo}?auto=format&fit=crop&w=24&h=32&q=60`
+}
+
 export const PLACEHOLDER_PHOTO = 'photo-1459749411175-04bf5292ceea'

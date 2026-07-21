@@ -1,32 +1,28 @@
-// Promo codes. `scope` is either 'all' or a specific event id.
-// kind 'percent' → value is % off, kind 'flat' → value is K off.
+// `scope` is either 'all' or a specific event id.
 export const promotions = [
   {
     code: 'ZED10',
-    tone: 'coral',
-    emoji: '🎉',
+    icon: 'tag',
     title: '10% off your booking',
-    blurb: 'New here? Take 10% off anything — free events already sorted.',
+    blurb: 'First time here? Take 10% off any paid ticket.',
     kind: 'percent',
     value: 10,
     scope: 'all',
   },
   {
     code: 'YOMAPS20',
-    tone: 'gold',
-    emoji: '🎤',
+    icon: 'music',
     title: '20% off Lusaka July',
-    blurb: 'Yo Maps & Friends live — biggest night of the month, cheaper.',
+    blurb: 'Yo Maps & Friends at Heroes Stadium, 25 July.',
     kind: 'percent',
     value: 20,
     scope: 'evt-001',
   },
   {
     code: 'JAZZ50',
-    tone: 'green',
-    emoji: '🎷',
+    icon: 'ticket',
     title: 'K50 off Jazz by the Falls',
-    blurb: 'Sunset jazz in Livingstone — K50 knocked off each ticket.',
+    blurb: 'K50 off each ticket to the Livingstone sunset session.',
     kind: 'flat',
     value: 50,
     scope: 'evt-004',
@@ -35,15 +31,18 @@ export const promotions = [
 
 const byCode = Object.fromEntries(promotions.map((p) => [p.code, p]))
 
-// Returns { promo, discount, ok, reason } for a code against an event + total.
+/** @returns {{ok: boolean, promo?: object, discount?: number, reason?: string}} */
 export function applyPromo(rawCode, event, total) {
-  const code = rawCode.trim().toUpperCase()
-  if (!code) return { ok: false }
+  const code = String(rawCode).trim().toUpperCase()
+  if (!code) return { ok: false, reason: 'Enter a promo code' }
+
   const promo = byCode[code]
   if (!promo) return { ok: false, reason: "We don't recognise that code" }
-  if (promo.scope !== 'all' && promo.scope !== event.id)
+
+  if (promo.scope !== 'all' && promo.scope !== event.id) {
     return { ok: false, reason: `That code isn't valid for ${event.title}` }
+  }
+
   const raw = promo.kind === 'percent' ? (total * promo.value) / 100 : promo.value
-  const discount = Math.min(total, Math.round(raw))
-  return { ok: true, promo, discount }
+  return { ok: true, promo, discount: Math.min(total, Math.round(raw)) }
 }

@@ -1,78 +1,84 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
+import Sheet from './ui/Sheet.jsx'
+import Icon from './ui/Icon.jsx'
 import { addPurchase, startPlan } from '../store.js'
 import { applyPromo } from '../data/promotions.js'
+import { kwacha, price as fmtPrice, weekdayShort } from '../lib/format.js'
+import { eventImage } from '../lib/images.js'
+import { NETWORKS, formatPhoneInput, isValidEmail, networkList, parsePhone } from '../lib/phone.js'
 
-const money = (n) => (n === 0 ? 'FREE' : `K${n.toLocaleString()}`)
-const networks = ['Airtel Money', 'MTN MoMo', 'Zamtel Kwacha']
-
-// Deposit choices for the down-payment (layaway) plan.
-const depositPcts = [
-  { pct: 25, label: '25%' },
-  { pct: 50, label: '50%' },
-]
-const planLengths = [2, 3, 4]
+const MAX_TICKETS = 10
+const DEPOSIT_OPTIONS = [25, 50]
+const INSTALMENT_OPTIONS = [2, 3, 4]
 
 export default function Checkout({ event, onClose }) {
-  const [qty, setQty] = useState(1)
-  const [payMode, setPayMode] = useState('full') // 'full' | 'plan'
-  const [depositPct, setDepositPct] = useState(25)
-  const [months, setMonths] = useState(3)
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    mobile: '',
-    network: networks[0],
-  })
-  const [promoInput, setPromoInput] = useState('')
-  const [promo, setPromo] = useState(null) // { promo, discount }
-  const [promoMsg, setPromoMsg] = useState('')
-  const [done, setDone] = useState(false)
-  const [errors, setErrors] = useState({})
+  const formId = useId()
+  const formRef = useRef(null)
 
-  const isFree = event.price === 0
+  const [qty, setQty] = useState(1)
+  const [payMode, setPayMode] = useState('full')
+  const [depositPct, setDepositPct] = useState(25)
+  const [instalments, setInstalments] = useState(3)
+  const [fields, setFields] = useState({ name: '', email: '', phone: '', momo: '' })
+  const [network, setNetwork] = useState(NETWORKS.airtel.id)
+  const [promoInput, setPromoInput] = useState('')
+  const [promo, setPromo] = useState(null)
+  const [promoNote, setPromoNote] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [receipt, setReceipt] = useState(null)
+
+  const free = event.price === 0
   const subtotal = event.price * qty
   const discount = promo?.discount ?? 0
   const total = Math.max(0, subtotal - discount)
 
-  const deposit = useMemo(
-    () => Math.round((total * depositPct) / 100),
-    [total, depositPct],
-  )
-  const monthly = useMemo(
-    () => Math.ceil((total - deposit) / months / 5) * 5,
-    [total, deposit, months],
+  const deposit = useMemo(() => Math.round((total * depositPct) / 100), [total, depositPct])
+  const perInstalment = useMemo(
+    () => Math.ceil((total - deposit) / instalments / 5) * 5,
+    [total, deposit, instalments],
   )
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
+  const onPlan = !free && payMode === 'plan'
+  const dueNow = free ? 0 : onPlan ? deposit : total
 
-  const applyCode = () => {
-    const res = applyPromo(promoInput, event, subtotal)
-    if (!res.ok) {
-      setPromo(null)
-      setPromoMsg(res.reason || 'Enter a promo code')
-      return
+  const set = (key) => (e) => {
+    const value = key === 'momo' || key === 'phone' ? formatPhoneInput(e.target.value) : e.target.value
+    setFields((f) => ({ ...f, [key]: value }))
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }))
+    if (key === 'momo') {
+      const parsed = parsePhone(value)
+      if (parsed.valid) setNetwork(parsed.network)
     }
-    setPromo(res)
-    setPromoMsg('')
+  }
+
+  const redeem = () => {
+    const result = applyPromo(promoInput, event, subtotal)
+    setPromo(result.ok ? result : null)
+    setPromoNote(result.ok ? { ok: true, text: `${result.promo.code} applied` } : { ok: false, text: result.reason })
   }
 
   const validate = () => {
-    const er = {}
-    if (!form.name.trim()) er.name = 'Tell us your name'
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) er.email = 'Enter a valid email'
-    if (!/^(\+?26)?0?9[5-7]\d{7}$/.test(form.phone.replace(/\s/g, '')))
-      er.phone = 'Enter a valid Zambian phone'
-    if (!isFree && !/^(\+?26)?0?9[5-7]\d{7}$/.test(form.mobile.replace(/\s/g, '')))
-      er.mobile = 'Enter the mobile money number'
-    setErrors(er)
-    return Object.keys(er).length === 0
+    const next = {}
+    if (!fields.name.trim()) next.name = 'Enter the name on the ticket'
+    if (!isValidEmail(fields.email)) next.email = 'Enter a valid email address'
+    if (!parsePhone(fields.phone).valid) next.phone = 'Enter a Zambian mobile number'
+    if (!free && !parsePhone(fields.momo).valid) next.momo = 'Enter the number to charge'
+    setErrors(next)
+
+    const firstError = Object.keys(next)[0]
+    if (firstError) {
+      formRef.current?.querySelector(`[name="${firstError}"]`)?.focus()
+      return false
+    }
+    return true
   }
 
   const submit = (e) => {
     e.preventDefault()
     if (!validate()) return
-    // In a real build this is where you'd hit the mobile-money payment API.
+
+    // A real build hands off to the mobile-money collection API here and only
+    // records the ticket once the provider confirms the charge.
     const base = {
       eventId: event.id,
       title: event.title,
@@ -82,219 +88,352 @@ export default function Checkout({ event, onClose }) {
       venue: event.venue,
       date: event.date,
       time: event.time,
+      photo: event.photo,
       image: event.image,
       qty,
       total,
     }
-    if (!isFree && payMode === 'plan') {
-      startPlan({ ...base, deposit, paymentsLeft: months })
-    } else {
-      addPurchase({ ...base, total: isFree ? 0 : total })
-    }
-    setDone(true)
+
+    const record = onPlan
+      ? startPlan({ ...base, deposit, paymentsLeft: instalments })
+      : addPurchase({ ...base, total: free ? 0 : total })
+
+    setReceipt(record)
   }
 
-  const chargedNow = isFree ? 0 : payMode === 'plan' ? deposit : total
+  if (receipt) {
+    return (
+      <Sheet
+        title="Booking confirmed"
+        onClose={onClose}
+        footer={
+          <button type="button" className="btn btn-primary btn-block" onClick={onClose} data-autofocus>
+            Done
+          </button>
+        }
+      >
+        <div className="confirm">
+          <div className="confirm-mark">
+            <Icon name="check" size={28} strokeWidth={2.4} />
+          </div>
+          <h2>
+            {free
+              ? 'Your spot is reserved'
+              : onPlan
+                ? 'Payment plan started'
+                : 'Payment request sent'}
+          </h2>
+          <p>
+            {free
+              ? `You're on the list for ${event.title}. Bring this reference to the gate.`
+              : onPlan
+                ? `We've taken your ${kwacha(deposit)} deposit. Pay the balance any time from your account.`
+                : `Approve the ${kwacha(total)} ${NETWORKS[network].name} prompt on ${fields.momo} to release your ${qty === 1 ? 'ticket' : 'tickets'}.`}
+          </p>
+          <div className="confirm-ref">
+            Reference
+            <strong>{receipt.ref}</strong>
+          </div>
+          <p className="field-hint">
+            A copy is saved to your account and sent to {fields.email}.
+          </p>
+        </div>
+      </Sheet>
+    )
+  }
 
   return (
-    <div className="overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
-
-        {done ? (
-          <div className="success">
-            <div className="success-tick">✓</div>
-            <h2>
-              {isFree ? "You're in! 🎉" : payMode === 'plan' ? 'Plan started! 🎉' : 'Sorted! 🎉'}
-            </h2>
-            <p>
-              {isFree
-                ? `Your spot for ${event.title} is locked in.`
-                : payMode === 'plan'
-                  ? `We took your ${money(deposit)} deposit. Pay off the rest anytime from your account.`
-                  : `Check your phone — we sent a prompt to ${form.mobile} on ${form.network}.`}
-            </p>
-            <p className="success-sub">
-              {qty}× ticket{qty > 1 ? 's' : ''} for <strong>{event.title}</strong> saved to{' '}
-              <strong>{form.email}</strong>. See you there, {form.name.split(' ')[0]}!
-            </p>
-            <button className="btn btn-green btn-block" onClick={onClose}>Done</button>
-          </div>
-        ) : (
-          <>
-            <div className="modal-head">
-              <span className="modal-cat">{event.category} · {event.city}</span>
-              <h2>{event.title}</h2>
-              <p className="modal-artist">{event.artist}</p>
-            </div>
-
-            <div className="qty-row">
-              <span>Tickets</span>
-              <div className="qty-ctrl">
-                <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-                <strong>{qty}</strong>
-                <button type="button" onClick={() => setQty((q) => Math.min(10, q + 1))}>+</button>
+    <Sheet
+      eyebrow={`${event.category} · ${event.city}`}
+      title={event.title}
+      sub={event.artist}
+      onClose={onClose}
+      footer={
+        <>
+          <div className="totals">
+            {discount > 0 && (
+              <div className="total-line" data-discount="true">
+                <span>Discount</span>
+                <strong>−{kwacha(discount)}</strong>
               </div>
+            )}
+            <div className="total-line total-line-grand">
+              <span>{onPlan ? 'Due today' : 'Total'}</span>
+              <strong>{fmtPrice(dueNow)}</strong>
+            </div>
+          </div>
+          <button type="submit" form={formId} className={`btn btn-block ${free ? 'btn-accent' : 'btn-primary'}`}>
+            {free ? 'Reserve a spot' : onPlan ? `Pay deposit ${kwacha(deposit)}` : `Pay ${kwacha(total)}`}
+          </button>
+          <p className="secure-note">
+            <Icon name="lock" size={13} />
+            Secured mobile money payment
+          </p>
+        </>
+      }
+    >
+      <div className="co-summary">
+        <img src={eventImage(event, 128, 128)} alt="" width="64" height="64" loading="lazy" />
+        <div className="co-summary-text">
+          <strong>{event.venue}</strong>
+          <span>
+            <Icon name="calendar" size={14} />
+            {weekdayShort(event.date)} · {event.time}
+          </span>
+        </div>
+      </div>
+
+      <div className="co-section">
+        <div className="qty-row">
+          <span className="qty-row-label">
+            <strong>Tickets</strong>
+            <span>{free ? 'Free entry' : `${kwacha(event.price)} each`}</span>
+          </span>
+          <div className="qty-ctrl">
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              disabled={qty <= 1}
+              aria-label="Remove one ticket"
+            >
+              <Icon name="minus" size={18} />
+            </button>
+            <output aria-live="polite" aria-label="Ticket quantity">
+              {qty}
+            </output>
+            <button
+              type="button"
+              onClick={() => setQty((q) => Math.min(MAX_TICKETS, q + 1))}
+              disabled={qty >= MAX_TICKETS}
+              aria-label="Add one ticket"
+            >
+              <Icon name="plus" size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <form id={formId} ref={formRef} className="form" onSubmit={submit} noValidate>
+        <div className="co-section">
+          <p className="co-legend">
+            <Icon name="user" size={14} />
+            Ticket holder
+          </p>
+
+          <div className="form">
+            <Field
+              label="Full name"
+              name="name"
+              value={fields.name}
+              onChange={set('name')}
+              error={errors.name}
+              placeholder="Mwila Banda"
+              autoComplete="name"
+            />
+            <Field
+              label="Email"
+              name="email"
+              type="email"
+              inputMode="email"
+              value={fields.email}
+              onChange={set('email')}
+              error={errors.email}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
+            <Field
+              label="Mobile number"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              value={fields.phone}
+              onChange={set('phone')}
+              error={errors.phone}
+              placeholder="097 123 4567"
+              autoComplete="tel"
+            />
+          </div>
+        </div>
+
+        {!free && (
+          <>
+            <div className="co-section">
+              <p className="co-legend">
+                <Icon name="tag" size={14} />
+                Promo code
+              </p>
+              <div className="promo-row">
+                <input
+                  className="input"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  placeholder="e.g. ZED10"
+                  aria-label="Promo code"
+                />
+                <button type="button" className="btn btn-outline" onClick={redeem}>
+                  Apply
+                </button>
+              </div>
+              {promoNote && (
+                <p className="promo-note" data-ok={promoNote.ok} role="status">
+                  <Icon name={promoNote.ok ? 'check' : 'alert'} size={14} />
+                  {promoNote.text}
+                  {promoNote.ok && discount > 0 && ` — you save ${kwacha(discount)}`}
+                </p>
+              )}
             </div>
 
-            <form className="form" onSubmit={submit} noValidate>
-              <label>
-                Full name
-                <input value={form.name} onChange={set('name')} placeholder="Mwila Banda" />
-                {errors.name && <em>{errors.name}</em>}
-              </label>
+            <div className="co-section">
+              <p className="co-legend">
+                <Icon name="wallet" size={14} />
+                Payment option
+              </p>
+              <div className="paymode">
+                <button
+                  type="button"
+                  className="paymode-opt"
+                  data-active={payMode === 'full' || undefined}
+                  aria-pressed={payMode === 'full'}
+                  onClick={() => setPayMode('full')}
+                >
+                  <strong>Pay in full</strong>
+                  <span>{kwacha(total)} now</span>
+                </button>
+                <button
+                  type="button"
+                  className="paymode-opt"
+                  data-active={payMode === 'plan' || undefined}
+                  aria-pressed={payMode === 'plan'}
+                  onClick={() => setPayMode('plan')}
+                >
+                  <strong>Pay a deposit</strong>
+                  <span>from {kwacha(Math.round(total * 0.25))} now</span>
+                </button>
+              </div>
 
-              <label>
-                Email
-                <input value={form.email} onChange={set('email')} placeholder="you@email.com" type="email" />
-                {errors.email && <em>{errors.email}</em>}
-              </label>
-
-              <label>
-                Phone
-                <input value={form.phone} onChange={set('phone')} placeholder="097 1234567" />
-                {errors.phone && <em>{errors.phone}</em>}
-              </label>
-
-              {!isFree && (
-                <>
-                  <div className="promo-row">
-                    <input
-                      className="promo-input"
-                      value={promoInput}
-                      onChange={(e) => setPromoInput(e.target.value)}
-                      placeholder="Promo code (e.g. ZED10)"
-                    />
-                    <button type="button" className="btn btn-outline promo-apply" onClick={applyCode}>
-                      Apply
-                    </button>
-                  </div>
-                  {promo && (
-                    <div className="promo-ok">
-                      ✓ <strong>{promo.promo.code}</strong> applied — you saved {money(discount)}
-                    </div>
-                  )}
-                  {promoMsg && <div className="promo-bad">{promoMsg}</div>}
-
-                  <div className="paymode">
-                    <button
-                      type="button"
-                      className="paymode-opt"
-                      data-active={payMode === 'full'}
-                      onClick={() => setPayMode('full')}
-                    >
-                      <strong>Pay in full</strong>
-                      <span>{money(total)} now</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="paymode-opt"
-                      data-active={payMode === 'plan'}
-                      onClick={() => setPayMode('plan')}
-                    >
-                      <strong>Pay a deposit</strong>
-                      <span>from {money(Math.round((total * 25) / 100))} now</span>
-                    </button>
-                  </div>
-
-                  {payMode === 'plan' && (
-                    <div className="plan-block">
-                      <div className="plan-title">💳 Down-payment plan</div>
-                      <div className="plan-sub">Pay a bit now, the rest at your pace.</div>
-
-                      <div className="plan-choice">
-                        <span>Deposit today</span>
-                        <div className="seg">
-                          {depositPcts.map((d) => (
-                            <button
-                              type="button"
-                              key={d.pct}
-                              data-active={depositPct === d.pct}
-                              onClick={() => setDepositPct(d.pct)}
-                            >
-                              {d.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="plan-choice">
-                        <span>Then split into</span>
-                        <div className="seg">
-                          {planLengths.map((n) => (
-                            <button
-                              type="button"
-                              key={n}
-                              data-active={months === n}
-                              onClick={() => setMonths(n)}
-                            >
-                              {n}×
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="plan-breakdown">
-                        <div>
-                          <em>Today</em>
-                          <strong>{money(deposit)}</strong>
-                        </div>
-                        <div className="plan-then">then</div>
-                        <div>
-                          <em>{months} payments of</em>
-                          <strong>{money(monthly)}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pay-block">
-                    <div className="pay-title">📱 Pay the easy way — Mobile Money</div>
-                    <div className="network-row">
-                      {networks.map((n) => (
+              {onPlan && (
+                <div className="plan-box">
+                  <div className="plan-row">
+                    <span>Deposit today</span>
+                    <div className="seg">
+                      {DEPOSIT_OPTIONS.map((pct) => (
                         <button
+                          key={pct}
                           type="button"
-                          key={n}
-                          className="network"
-                          data-active={form.network === n}
-                          onClick={() => setForm((f) => ({ ...f, network: n }))}
+                          data-active={depositPct === pct || undefined}
+                          aria-pressed={depositPct === pct}
+                          onClick={() => setDepositPct(pct)}
                         >
-                          {n}
+                          {pct}%
                         </button>
                       ))}
                     </div>
-                    <label>
-                      Mobile money number
-                      <input value={form.mobile} onChange={set('mobile')} placeholder="097 1234567" />
-                      {errors.mobile && <em>{errors.mobile}</em>}
-                    </label>
                   </div>
-                </>
-              )}
 
-              {!isFree && discount > 0 && (
-                <div className="total-row muted">
-                  <span>Discount</span>
-                  <strong>−{money(discount)}</strong>
+                  <div className="plan-row">
+                    <span>Balance over</span>
+                    <div className="seg">
+                      {INSTALMENT_OPTIONS.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          data-active={instalments === n || undefined}
+                          aria-pressed={instalments === n}
+                          onClick={() => setInstalments(n)}
+                        >
+                          {n} payments
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="plan-split">
+                    <div>
+                      <em>Today</em>
+                      <strong>{kwacha(deposit)}</strong>
+                    </div>
+                    <Icon name="arrowRight" size={16} className="plan-split-arrow" />
+                    <div>
+                      <em>{instalments} × payments of</em>
+                      <strong>{kwacha(perInstalment)}</strong>
+                    </div>
+                  </div>
                 </div>
               )}
-              <div className="total-row">
-                <span>{payMode === 'plan' && !isFree ? 'Due today' : 'Total'}</span>
-                <strong>{money(chargedNow)}</strong>
+            </div>
+
+            <div className="co-section">
+              <p className="co-legend">
+                <Icon name="phone" size={14} />
+                Mobile money
+              </p>
+              <div className="network-row" role="group" aria-label="Mobile money provider">
+                {networkList.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="network"
+                    data-active={network === item.id || undefined}
+                    aria-pressed={network === item.id}
+                    onClick={() => setNetwork(item.id)}
+                  >
+                    <span className="network-dot" style={{ background: item.colour }} />
+                    {item.short}
+                  </button>
+                ))}
               </div>
 
-              <button className={`btn ${isFree ? 'btn-green' : 'btn-primary'} btn-block`} type="submit">
-                {isFree
-                  ? 'Reserve free spot'
-                  : payMode === 'plan'
-                    ? `Start plan · Pay ${money(deposit)}`
-                    : `Pay ${money(total)}`}
-              </button>
-              <p className="secure-note">🔒 Secure mobile money payment</p>
-            </form>
+              <div style={{ marginTop: 'var(--sp-3)' }}>
+                <Field
+                  label="Number to charge"
+                  name="momo"
+                  type="tel"
+                  inputMode="tel"
+                  value={fields.momo}
+                  onChange={set('momo')}
+                  error={errors.momo}
+                  placeholder="097 123 4567"
+                  hint="We detect your provider from the number."
+                />
+              </div>
+            </div>
           </>
         )}
-      </div>
+      </form>
+    </Sheet>
+  )
+}
+
+function Field({ label, name, error, hint, ...rest }) {
+  const id = useId()
+  const errorId = `${id}-error`
+  const hintId = `${id}-hint`
+
+  return (
+    <div className="field">
+      <label className="field-label" htmlFor={id}>
+        {label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        className="input"
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? errorId : hint ? hintId : undefined}
+        {...rest}
+      />
+      {error ? (
+        <span className="error-text" id={errorId}>
+          <Icon name="alert" size={13} />
+          {error}
+        </span>
+      ) : (
+        hint && (
+          <span className="field-hint" id={hintId}>
+            {hint}
+          </span>
+        )
+      )}
     </div>
   )
 }

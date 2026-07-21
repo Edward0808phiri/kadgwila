@@ -1,0 +1,438 @@
+/* ============================================================
+   UI KIT — buttons, badges, form controls, segmented controls
+   ============================================================ */
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  /* 44px min target — WCAG 2.5.5 / comfortable on a phone. */
+  min-height: 44px;
+  padding: var(--sp-3) var(--sp-5);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-1) var(--ease),
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    box-shadow var(--dur-1) var(--ease),
+    filter var(--dur-1) var(--ease);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  min-height: 38px;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+.btn-lg {
+  min-height: 52px;
+  padding: var(--sp-4) var(--sp-7);
+  font-size: var(--fs-lg);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: var(--on-brand);
+  box-shadow: var(--shadow-brand);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-primary:hover,
+.btn-accent:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active,
+.btn-accent:active {
+  transform: translateY(0);
+  filter: brightness(0.97);
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px) saturate(140%);
+}
+
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btn-outline:hover {
+  border-color: var(--ink-3);
+  background: var(--fill);
+}
+
+.btn-quiet {
+  background: var(--fill);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btn-quiet:hover {
+  background: var(--fill-2);
+}
+
+.btn-soldout {
+  background: var(--fill);
+  color: var(--ink-3);
+  border-color: var(--line);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-soldout:hover {
+  transform: none;
+  filter: none;
+}
+
+/* Icon-only control — square, centred, always ≥44px. */
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease),
+    border-color var(--dur-1) var(--ease),
+    transform var(--dur-1) var(--ease);
+}
+
+.icon-btn:hover {
+  background: var(--fill-2);
+  border-color: var(--ink-3);
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Badges & pills ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 4px 10px;
+  border-radius: var(--r-full);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-brand {
+  background: var(--brand-soft);
+  color: var(--brand-text);
+  border: 1px solid var(--brand-line);
+}
+
+.badge-accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.badge-neutral {
+  background: var(--fill);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+
+.badge-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.badge-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border: 1px solid rgba(245, 197, 24, 0.4);
+}
+
+/* ---------- Form controls ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.field > .field-label,
+.form label > span:first-child {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.field-hint {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.input,
+.form input,
+.form select,
+.form textarea {
+  width: 100%;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  /* 16px on mobile stops iOS Safari zooming the viewport on focus. */
+  font-size: 16px;
+  font-family: inherit;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-sm);
+  outline: none;
+  min-height: 48px;
+  transition:
+    border-color var(--dur-1) var(--ease),
+    box-shadow var(--dur-1) var(--ease),
+    background var(--dur-1) var(--ease);
+}
+
+@media (min-width: 640px) {
+  .input,
+  .form input,
+  .form select,
+  .form textarea {
+    font-size: var(--fs-md);
+  }
+}
+
+.input::placeholder,
+.form input::placeholder {
+  color: var(--ink-3);
+  font-weight: 500;
+}
+
+.input:focus,
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-soft);
+  background: var(--bg-1);
+}
+
+.input[aria-invalid='true'],
+.form input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.input[aria-invalid='true']:focus,
+.form input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.form select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) 50%,
+    calc(100% - 14px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: var(--sp-10);
+}
+
+/* Inline validation message. */
+.error-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+  font-style: normal;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* ---------- Segmented control ---------- */
+.seg {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-inset);
+  padding: 4px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+}
+
+.seg button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  min-height: 38px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease);
+}
+
+.seg button[data-active='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* ---------- Toggle switch ---------- */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-weight: 700;
+  font-size: var(--fs-base);
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-track {
+  width: 46px;
+  height: 26px;
+  border-radius: var(--r-full);
+  background: var(--fill);
+  border: 1px solid var(--line);
+  position: relative;
+  flex: none;
+  transition:
+    background var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.switch input:checked + .switch-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.switch input:checked + .switch-track .switch-thumb {
+  transform: translateX(20px);
+}
+
+.switch input:focus-visible + .switch-track {
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------- Empty state ---------- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+  padding: var(--sp-12) var(--sp-5);
+}
+
+.empty-state-icon {
+  color: var(--ink-3);
+  margin-bottom: var(--sp-1);
+}
+
+.empty-state strong {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+}
+
+.empty-state p {
+  color: var(--ink-2);
+  font-weight: 500;
+  font-size: var(--fs-base);
+  max-width: 38ch;
+}
+
+/* ---------- Skeleton shimmer ---------- */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--fill) 25%,
+    var(--fill-2) 37%,
+    var(--fill) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--r-sm);
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}

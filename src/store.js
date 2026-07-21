@@ -92,6 +92,7 @@ export function payInstallment(planId) {
       artist: plan.artist,
       category: plan.category,
       city: plan.city,
+      photo: plan.photo,
       image: plan.image,
       date: plan.date,
       time: plan.time,

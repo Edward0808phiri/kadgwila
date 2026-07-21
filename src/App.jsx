@@ -9,6 +9,7 @@ import Checkout from './components/Checkout.jsx'
 import Account from './components/Account.jsx'
 import NearbyMap from './components/NearbyMap.jsx'
 import Studio from './components/Studio.jsx'
+import Live from './components/Live.jsx'
 import Icon from './components/ui/Icon.jsx'
 import { categories, events as allEvents } from './data/events.js'
 import { useAccount } from './store.js'
@@ -25,6 +26,7 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false)
   const [showMap, setShowMap] = useState(false)
   const [showStudio, setShowStudio] = useState(false)
+  const [showLive, setShowLive] = useState(false)
 
   const [theme, setTheme] = useState(() => {
     try {
@@ -72,6 +74,8 @@ export default function App() {
     [],
   )
 
+  const liveEvents = useMemo(() => allEvents.filter((e) => e.live), [])
+
   const rows = useMemo(() => {
     const upcoming = [...allEvents].sort(byDate)
     return [
@@ -112,7 +116,7 @@ export default function App() {
     goToEvents()
   }
 
-  const activeView = freeOnly ? 'free' : 'browse'
+  const activeView = showLive ? 'live' : freeOnly ? 'free' : 'browse'
 
   return (
     <div className="app">
@@ -241,7 +245,7 @@ export default function App() {
         activeView={activeView}
         ticketCount={ticketCount}
         onBrowseAll={browseAll}
-        onBrowseFree={browseFree}
+        onOpenLive={() => setShowLive(true)}
         onOpenMap={() => setShowMap(true)}
         onOpenAccount={() => setShowAccount(true)}
       />
@@ -254,6 +258,9 @@ export default function App() {
         <NearbyMap onClose={() => setShowMap(false)} onSelect={setCheckoutEvent} />
       )}
       {showStudio && <Studio onClose={() => setShowStudio(false)} />}
+      {showLive && (
+        <Live events={liveEvents} onSelect={setCheckoutEvent} onClose={() => setShowLive(false)} />
+      )}
     </div>
   )
 }

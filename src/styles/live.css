@@ -1,0 +1,327 @@
+/* ============================================================
+   LIVE — on-air hero, floating reactions, and the live event list
+   ============================================================ */
+
+.live-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  padding: var(--sp-6) var(--sp-5);
+  margin-bottom: var(--sp-5);
+  background:
+    radial-gradient(120% 140% at 12% 0%, rgba(255, 107, 96, 0.28), transparent 60%),
+    linear-gradient(150deg, var(--bg-3), var(--bg-1));
+  border: 1px solid var(--line);
+  isolation: isolate;
+}
+
+.live-hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.live-hero h3 {
+  font-size: var(--fs-2xl);
+  margin-top: var(--sp-2);
+}
+
+.live-hero p {
+  margin-top: 6px;
+  max-width: 44ch;
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+/* ---- On-air pill + the pulsing dot it shares with the row badges ---- */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px;
+  border-radius: var(--r-full);
+  background: var(--danger-soft);
+  border: 1px solid rgba(255, 107, 96, 0.4);
+  color: var(--danger);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: live-pulse 1.8s var(--ease) infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 107, 96, 0.55);
+  }
+  70% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 6px rgba(255, 107, 96, 0);
+  }
+}
+
+/* ---- Reaction motes drifting up behind the copy ---- */
+.live-motes {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.live-mote {
+  position: absolute;
+  bottom: -10%;
+  color: var(--danger);
+  opacity: 0;
+  animation: live-float 7s linear infinite;
+}
+
+.live-mote .icon {
+  width: calc(18px * var(--mote-scale, 1));
+  height: calc(18px * var(--mote-scale, 1));
+}
+
+@keyframes live-float {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  100% {
+    /* Drifts past the top of the hero and fades before it clips. */
+    transform: translateY(-190px) translateX(14px) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-mote {
+    animation: none;
+    opacity: 0.25;
+    bottom: auto;
+    top: 18%;
+  }
+
+  .live-dot {
+    animation: none;
+  }
+}
+
+/* ---- The list ---- */
+.live-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  list-style: none;
+}
+
+.live-item {
+  padding: var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+
+.live-item-main {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.live-thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-xs);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.live-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.live-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.live-item-text h4 {
+  font-size: var(--fs-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-item-text p {
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-viewers {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+}
+
+.live-badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--r-full);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* ---- Like / comment ---- */
+.live-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line-2);
+}
+
+.live-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  background: var(--fill);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  transition:
+    background var(--dur-1) var(--ease),
+    color var(--dur-1) var(--ease);
+}
+
+@media (hover: hover) {
+  .live-action:hover {
+    background: var(--fill-2);
+    color: var(--ink);
+  }
+}
+
+.live-action[data-on='true'] {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Filling the heart is what actually reads as "liked" — the colour alone
+   is too easy to miss at this size. */
+.live-action[data-on='true'] .live-heart {
+  fill: currentColor;
+}
+
+.live-thread {
+  margin-top: var(--sp-3);
+}
+
+.live-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--sp-2);
+  list-style: none;
+}
+
+.live-comments li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-xs);
+  background: var(--bg-inset);
+}
+
+.live-comments p {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.live-comment-del {
+  flex: none;
+  color: var(--ink-3);
+  padding: 2px;
+  border-radius: var(--r-xs);
+}
+
+@media (hover: hover) {
+  .live-comment-del:hover {
+    color: var(--danger);
+  }
+}
+
+.live-compose {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.live-compose input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px var(--sp-3);
+  border-radius: var(--r-full);
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+}
+
+.live-compose input:focus-visible {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-soft);
+}
+
+.live-compose button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.live-compose button:disabled {
+  background: var(--fill);
+  color: var(--ink-3);
+  cursor: not-allowed;
+}

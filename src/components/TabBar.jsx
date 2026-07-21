@@ -1,9 +1,9 @@
 import Icon from './ui/Icon.jsx'
 
-export default function TabBar({ activeView, ticketCount, onBrowseAll, onBrowseFree, onOpenMap, onOpenAccount }) {
+export default function TabBar({ activeView, ticketCount, onBrowseAll, onOpenLive, onOpenMap, onOpenAccount }) {
   const tabs = [
     { id: 'browse', label: 'Browse', icon: 'home', onClick: onBrowseAll },
-    { id: 'free', label: 'Free', icon: 'tag', onClick: onBrowseFree },
+    { id: 'live', label: 'Live', icon: 'broadcast', onClick: onOpenLive },
     { id: 'map', label: 'Near me', icon: 'pin', onClick: onOpenMap },
     { id: 'account', label: 'Tickets', icon: 'ticket', onClick: onOpenAccount, badge: ticketCount },
   ]

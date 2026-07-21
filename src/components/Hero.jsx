@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import Icon from './ui/Icon.jsx'
 import { useReducedMotion } from '../hooks/useMediaQuery.js'
-import { price, weekdayLong } from '../lib/format.js'
 import { eventImage, eventSrcSet } from '../lib/images.js'
 
 const ROTATE_MS = 7000
@@ -45,20 +44,6 @@ export default function Hero({ events, onSelect, onBrowse }) {
         </p>
 
         <h1>{featured.title}</h1>
-
-        <div className="hero-meta">
-          <span className="hero-price">{price(featured.price)}</span>
-          <span className="hero-meta-item">
-            <Icon name="calendar" size={15} />
-            {weekdayLong(featured.date)} · {featured.time}
-          </span>
-          <span className="hero-meta-item">
-            <Icon name="pin" size={15} />
-            {featured.venue}, {featured.city}
-          </span>
-        </div>
-
-        <p className="hero-desc">{featured.description}</p>
 
         <div className="hero-cta">
           <button type="button" className="btn btn-primary btn-lg" onClick={() => onSelect(featured)}>

@@ -187,6 +187,21 @@ const paths = {
       <path d="M9 9h.01M15 9h.01M9 14c1.8 1.4 4.2 1.4 6 0" />
     </>
   ),
+  /* Broadcast waves around a dot — the standard "on air" mark. */
+  broadcast: (
+    <>
+      <path d="M4.9 19.1a10 10 0 0 1 0-14.2M19.1 4.9a10 10 0 0 1 0 14.2" />
+      <path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4" />
+      <circle cx="12" cy="12" r="2" />
+    </>
+  ),
+  heart: (
+    <path d="M12 20.3 4.4 12.7a4.9 4.9 0 0 1 6.9-6.9l.7.7.7-.7a4.9 4.9 0 0 1 6.9 6.9Z" />
+  ),
+  comment: (
+    <path d="M20.5 11.6a8 8 0 0 1-8.5 8 9 9 0 0 1-3.8-.9L3.5 20.5l1.8-4.7a8 8 0 0 1-1.8-5 8 8 0 0 1 8.5-8 8 8 0 0 1 8.5 8Z" />
+  ),
+  send: <path d="M21.5 2.5 2.5 10l7.5 3.5L13.5 21Z" />,
 }
 
 export const iconNames = Object.keys(paths)

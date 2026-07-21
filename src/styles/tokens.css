@@ -69,6 +69,11 @@
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system,
     'Segoe UI', Roboto, sans-serif;
 
+  /* Headings and event titles carry a display grotesque so they hold their own
+     against the fliers; body and UI text stay on the calmer Jakarta. */
+  --font-display: 'Bricolage Grotesque', 'Plus Jakarta Sans', ui-sans-serif,
+    system-ui, sans-serif;
+
   --fs-2xs: 0.6875rem;
   --fs-xs: 0.75rem;
   --fs-sm: 0.8125rem;

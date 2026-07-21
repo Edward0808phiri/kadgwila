@@ -2,6 +2,8 @@
 export const events = [
   {
     id: 'evt-001',
+    live: true,
+    baseLikes: 1840,
     title: 'Lusaka July',
     artist: 'Yo Maps & Friends',
     category: 'Music',
@@ -83,6 +85,8 @@ export const events = [
   },
   {
     id: 'evt-005',
+    live: true,
+    baseLikes: 612,
     title: 'Kitwe Food & Culture Festival',
     artist: 'Taste of Zambia',
     category: 'Food',
@@ -144,6 +148,8 @@ export const events = [
   },
   {
     id: 'evt-008',
+    live: true,
+    baseLikes: 977,
     title: 'Gospel Worship Experience',
     artist: 'North-Western Mass Choir',
     category: 'Music',
@@ -184,6 +190,8 @@ export const events = [
   },
   {
     id: 'evt-010',
+    live: true,
+    baseLikes: 1435,
     title: 'Kabwe Amapiano Sessions',
     artist: 'DJ Mando & guests',
     category: 'Music',

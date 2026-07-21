@@ -26,12 +26,12 @@ export default function EventCard({ event, onSelect, priority = false }) {
       <div className="card-media">
         <img
           className="card-img"
-          src={eventImage(event, 300, 400)}
-          srcSet={eventSrcSet(event, 300, 400)}
+          src={eventImage(event, 300, 375)}
+          srcSet={eventSrcSet(event, 300, 375)}
           sizes="(min-width: 900px) 244px, (min-width: 640px) 232px, 62vw"
           alt=""
           width="300"
-          height="400"
+          height="375"
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
         />

@@ -28,6 +28,10 @@ body {
   font-size: var(--fs-md);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Lining figures keep prices and counts from jittering as they change, and
+     contextual alternates clean up the Jakarta 'ti'/'tt' pairs. */
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'calt' 1;
   overflow-x: hidden;
 }
 
@@ -35,6 +39,7 @@ h1,
 h2,
 h3,
 h4 {
+  font-family: var(--font-display);
   letter-spacing: var(--tracking-tight);
   line-height: var(--lh-tight);
   font-weight: 800;
